@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My AR Project</title>
+ 
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+
+<script src="https://raw.githack.com/AR-js-org/AR.js/3.4.7/aframe/build/aframe-ar.js"></script>
+ 
+  <script>
+    // ---------- Component 1: tap an object to change its colour ----------
+    AFRAME.registerComponent('color-changer', {
+      init: function () {
+        const colors = ['#EF2D5E', '#FFC65D', '#4CC3D9', '#7BC8A4', '#9B59B6'];
+        let index = 0;
+        this.el.addEventListener('click', () => {
+          index = (index + 1) % colors.length;      // go to next colour
+          this.el.setAttribute('color', colors[index]);
+        });
+      }
+    });
+
+ 
+    // ---------- Component 2: show whether the marker is visible ----------
+    AFRAME.registerComponent('marker-status', {
+      init: function () {
+        const banner = document.querySelector('#status');
+        this.el.addEventListener('markerFound', () => {
+          banner.textContent = 'Marker FOUND - tap the red ball!';
+          banner.style.background = '#2E7D32';
+        });
+        this.el.addEventListener('markerLost', () => {
+          banner.textContent = 'Marker LOST - point the camera at the Hiro marker';
+          banner.style.background = '#C62828';
+        });
+      }
+    });
+
+AFRAME.registerComponent('info-toggle', {
+    init: function () {
+        let isVisible = false;
+
+        this.el.addEventListener('click', () => {
+            const panel = document.querySelector('#car-info');
+
+            console.log('Silver box clicked');
+
+            if (!panel) {
+                console.error('Information panel not found');
+                return;
+            }
+
+            isVisible = !isVisible;
+            panel.setAttribute('visible', isVisible);
+        });
+    }
+});
+
+
+  </script>
+ 
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #status {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+      padding: 10px; text-align: center; color: white;
+      font-family: sans-serif; background: #C62828;
+    }
+  </style>
+</head>
+ 
+<body>
+  <div id="status">Looking for marker...</div>
+ 
+  <a-scene 
+      embedded vr-mode-ui="enabled: false"
+      renderer="antialias: true; colorManagement: true; logarithmicDepthBuffer: true"
+      arjs="sourceType: webcam; debugUIEnabled: false;"
+      cursor="rayOrigin: mouse;"
+      raycaster="objects: .clickable">
+
+    <a-assets timeout="20000">
+      <a-asset-item id="ferrari-model"
+        src="./models/ferrari-f40.glb">
+      </a-asset-item>
+    </a-assets>
+ 
+    <a-marker preset="hiro" emitevents="true" marker-status>
+ 
+      <a-plane
+          rotation="-90 0 0"
+          width="3.2"
+          height="3.2"
+          color="#2C3E50">
+      </a-plane>
+
+      <!-- Car display platform -->
+      <a-cylinder
+          position="0 0.12 0"
+          radius="1.1"
+          height="0.2"
+          segments-radial="64"
+          color="#D4AF37">
+      </a-cylinder>
+ 
+      <!-- infromationm panel -->
+      <!-- looks small -->
+      <a-box position="-1.3 0.2 0" width="0.3" height="0.3" depth="0.3" color="#C0C0C0"></a-box>
+
+      <!-- invisible, big click area -->
+      <a-box class="clickable" info-toggle
+            position="-2.4 0 0.5"
+            width="0.7" height="0.7" depth="0.7"
+            material="opacity: 0; transparent: true">
+      </a-box>
+
+      <a-text
+          value="TAP TO BOX TO VIEW SPECS"
+          position="-1.3 0.3 -0.3"
+          rotation="-90 0 0"
+          align="center"
+          width="1.2"
+          color="#FFFFFF">
+      </a-text>
+      <!-- Slowly rotating 3D car -->
+      <a-entity 
+          gltf-model="#ferrari-model"
+          position="0 0.3 0" 
+          scale="0.3 0.3 0.3"
+          animation="property: rotation;
+                    from: 0 0 0;
+                    to: 0 360 0;
+                    dur: 50000;
+                    easing: linear;
+                    loop: true">
+        </a-entity>
+        
+        <a-text
+            id="car-info"
+            value="FERRARI F10&#10;Manufacturer: Ferrari&#10;Formula One Racing Car"
+            position="0 0.3 -1.2"
+            rotation="-90 0 0"
+            align="center"
+            width="2"
+            color="#FFFFFF"
+            visible="false">
+        </a-text>
+ 
+      <!-- Tappable, bouncing ball (class="clickable" lets the ray hit it) -->
+      <a-sphere class="clickable" color-changer
+                position="-2 0.5 0" radius="0.2" color="#EF2D5E"
+                animation="property: position; from: 1.1 0.4 0; to: 1.1 0.8 0;
+                           dir: alternate; dur: 700;
+                           easing: easeInOutQuad; loop: true">
+      </a-sphere>
+ 
+      <a-text
+          value="APEX MOTORS"
+          position="0 0.2 -1.3"
+          rotation="-90 0 0"
+          align="center"
+          width="3"
+          color="#000000">
+      </a-text>
+    </a-marker>
+ 
+    <!-- Camera + "tap" detection (cursor uses the touch / mouse position) -->
+    <a-entity camera></a-entity>
+    </a-scene>
+</body>
+</html>
+                    
